@@ -4,7 +4,11 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include "lib_pub.h"
+#include "osal_pub.h"
 #include <errno.h>
+
+#define IS_SEM_ID_VALID(id) (id<0?false:true)
+
 
 union semun
 {
@@ -14,13 +18,30 @@ union semun
     struct seminfo *__buf;		//<= buffer for IPC_INFO
 };
 
+typedef int sem_group_t;
 
-int my_sem_init(int sem_num);
+extern sem_group_t sem_group_s;
 
-int sem_v(int sem_id);
-int sem_p(int sem_id);
-int get_nsem(int sem_id, int sem_num);
-int rm_sem(int sem_id, int sem_num);    
+typedef enum{
+    SUCCESS = 0,
+    FAIL = 1
+}sem_status_t;
+
+typedef struct _my_sem_t{
+    int group_id;
+    int sem_id;
+    int val;
+}my_sem_t;
+
+
+
+static int sem_get_id(void);
+sem_status_t sem_constuctor(my_sem_t *my_sem);
+sem_status_t sem_destuctor(my_sem_t *my_sem);
+sem_status_t sem_p(my_sem_t *my_sem);
+sem_status_t sem_v(my_sem_t *my_sem);
+int sem_get_val(my_sem_t *my_sem);
+sem_status_t sem_set_val(my_sem_t *my_sem, int val);
 #endif
 
 

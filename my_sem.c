@@ -1,79 +1,92 @@
 #include "my_sem.h"
 
+sem_group_t sem_group_s = 0;
 
 
-
-int my_sem_init(int sem_num)
+static int sem_get_id(void)
 {
-    const char *filename = "main.c";
-    int project_id = 0x03;
-    key_t key_id = ftok(filename, project_id);
-    printf("key id is %d\n",key_id);
-    int sem_id = semget(key_id, 1,IPC_CREAT|0666);
-    if (sem_id == -1){
-        printf("[ERROR]code:%d\n",errno);
-        goto fail;
-    }else{
-        printf("sem_id:%d\n",sem_id);
-        union semun cmd;
-        cmd.val = sem_num;
-        int status = semctl(sem_id,0,SETVAL,cmd);
-        if(status < 0){
-            goto fail;
-        }
-    }
+    int key_id = osal_get_keyid();
+    int sem_id = semget(key_id,1,IPC_CREAT|0666);
+    printf("sem_id is %d\n",sem_id);
     return sem_id;
-fail:
-    return -1;
 }
 
-int sem_p(int sem_id)
+sem_status_t sem_constuctor(my_sem_t *my_sem)
+{
+    my_sem->group_id = sem_group_s;
+    my_sem->sem_id = sem_get_id();
+    sem_group_s += 1;
+    if (!IS_SEM_ID_VALID(my_sem->sem_id )){
+        printf("[ERROR]code:%d\n",errno);
+        goto fail;
+    }
+    return SUCCESS;
+fail:
+    return FAIL;
+}
+
+sem_status_t sem_destuctor(my_sem_t *my_sem)
+{
+    int status = 0;
+    if(!semctl(my_sem->sem_id, my_sem->group_id, IPC_RMID))
+        goto fail;
+    my_sem->group_id = 0;
+    my_sem->sem_id = 0;
+    return SUCCESS;
+fail:
+    return FAIL;
+}
+
+
+sem_status_t sem_p(my_sem_t *my_sem)
 {
   struct sembuf sem_buf;
-  sem_buf.sem_num=0;
-  sem_buf.sem_op=-1;
-  sem_buf.sem_flg=SEM_UNDO;
-  //p_buf = {0,-1,SEM_UNDO};
-  if (semop(sem_id, &sem_buf, 1)==-1)
+  sem_buf.sem_num = 0;
+  sem_buf.sem_op  = -1;
+  sem_buf.sem_flg = SEM_UNDO;
+  if (semop(my_sem->sem_id, &sem_buf, 1)==-1)
   {
     printf("p-sem fail\n");
     goto fail;
   }
-    return 0;
+    return SUCCESS;
 fail:
-    return -1;
+    return FAIL;
 }
 
-int sem_v(int sem_id)
+sem_status_t sem_v(my_sem_t *my_sem)
 {
   struct sembuf sem_buf;
   sem_buf.sem_num = 0;
   sem_buf.sem_op  = 1;
   sem_buf.sem_flg = SEM_UNDO;
-  if (semop(sem_id, &sem_buf, 1)==-1)
+  if (semop(my_sem->sem_id, &sem_buf, 1)==-1)
   {
     printf("v-sem fail\n");
     goto fail;
   }
-    return 0;
+    return SUCCESS;
 fail:
-    return -1;
+    return FAIL;
 }
 
-
-int get_nsem(int sem_id, int sem_num)
+int sem_get_val(my_sem_t *my_sem)
 {
     int nsem = 0;
-    nsem = semctl(sem_id, sem_num, GETVAL);
-    //printf("sem_id:%d sem_num:%d value is %d",sem_id, sem_num, nsem);
+    nsem = semctl(my_sem->sem_id, my_sem->group_id, GETVAL);
     return nsem;
 }
-
-int rm_sem(int sem_id, int sem_num)
+sem_status_t sem_set_val(my_sem_t *my_sem, int val)
 {
-    int status = 0;
-    status = semctl(sem_id, sem_num, IPC_RMID);
-    //printf("sem_id:%d sem_num:%d has been removed\n",sem_id, sem_num);
-    return status;
+    union semun cmd;
+    my_sem->val = val;
+    cmd.val = my_sem->val;
+    int status = semctl(my_sem->sem_id ,my_sem->group_id,SETVAL,cmd);
+        if(status < 0){
+            goto fail;
+        }
+    return SUCCESS;
+fail:
+    return FAIL;
 }
 
