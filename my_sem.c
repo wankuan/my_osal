@@ -15,6 +15,7 @@ sem_status_t sem_constuctor(my_sem_t *my_sem)
 {
     my_sem->group_id = sem_group_s;
     my_sem->sem_id = sem_get_id();
+    sem_set_val(my_sem, my_sem->val);
     sem_group_s += 1;
     if (!IS_SEM_ID_VALID(my_sem->sem_id )){
         printf("[ERROR]code:%d\n",errno);
@@ -70,11 +71,10 @@ fail:
     return FAIL;
 }
 
-int sem_get_val(my_sem_t *my_sem)
+sem_status_t sem_get_val(my_sem_t *my_sem, int *val)
 {
-    int nsem = 0;
-    nsem = semctl(my_sem->sem_id, my_sem->group_id, GETVAL);
-    return nsem;
+    *val = semctl(my_sem->sem_id, my_sem->group_id, GETVAL);
+    return SUCCESS;
 }
 sem_status_t sem_set_val(my_sem_t *my_sem, int val)
 {

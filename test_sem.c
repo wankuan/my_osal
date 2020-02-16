@@ -20,7 +20,7 @@ void* thread1(void *arg)
     printf("[thread1]wait for get the message\n");
     sem_p(&sem);
     printf("[thread1]receive:\n");
-    printf("%s\n",message);
+    printf("[thread1]%s\n",message);
     sem_v(&sem);
 }
 
@@ -31,7 +31,7 @@ void* thread2(void *arg)
     sleep(3);
     strncpy(message,"semaphore is running!",100);
     printf("[thread2]write message:\n");
-    printf("%s\n",message);
+    printf("[thread2]%s\n",message);
     sem_v(&sem);
 }
 int main(int argc, char *argv[])

@@ -40,7 +40,7 @@ sem_status_t sem_constuctor(my_sem_t *my_sem);
 sem_status_t sem_destuctor(my_sem_t *my_sem);
 sem_status_t sem_p(my_sem_t *my_sem);
 sem_status_t sem_v(my_sem_t *my_sem);
-int sem_get_val(my_sem_t *my_sem);
+sem_status_t sem_get_val(my_sem_t *my_sem, int *val);
 sem_status_t sem_set_val(my_sem_t *my_sem, int val);
 #endif
 
