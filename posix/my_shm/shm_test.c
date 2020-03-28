@@ -10,7 +10,7 @@
 #include <string.h>
 
 #ifndef TANK_IPC_NAME
-#define TANK_IPC_NAME "tank_socket"
+#define TANK_IPC_NAME "/tank_socket"
 #endif
 
 // compiler cmd: gcc shm_test.c -o demo.out -lrt
