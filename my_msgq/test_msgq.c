@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
             msgq_send(&msg, message, 100, 1);
         }else if(*argv[1]=='r'){
             char message[100]="\0";
-            msgq_rcv(&msg, message, 100, 0);
+            msgq_rcv_wait(&msg, message, 100, 0);
             printf("receiver message is\n");
             printf("%s\n",message);
         }else{
